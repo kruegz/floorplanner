@@ -2,7 +2,7 @@ CC=g++
 CFLAGS=-c -Wall -std=c++11 -O3
 LDFLAGS=
 
-SOURCES=main.cpp floorplan.cpp
+SOURCES=main.cpp floorplan.cpp slicing_tree.cpp
 OBJECTS=$(SOURCES:.cpp=.o)
 EXECUTABLE=floorplanner
 

@@ -8,6 +8,7 @@
 
 #include "floorplan.h"
 #include "block.h"
+#include "slicing_tree.h"
 
 std::vector<Block> floorplan(std::vector<Block> blocks)
 {
@@ -61,7 +62,10 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
         }
     }
 
-    printSlicingTree(slicingTree);
+    // Create a slicing tree object
+    SlicingTree stree(slicingTree, separated_blocks);
+    
+    std::cout << stree.toString() << std::endl;
 
     // Perform simulated annealing
     int temp = STARTING_TEMP;
@@ -69,13 +73,14 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
     int cost;
 
     int min_score = INT_MAX;
-    std::vector<int> minSlicingTree;
+    SlicingTree min_stree;
 
     while (temp > freeze_temp)
     {
         //std::cout << "Temp: " << temp << std::endl;
 
-        Block current_block = scoreSlicingTree(slicingTree, separated_blocks);
+        Block current_block = stree.score();
+
         int current_score = current_block.area();
 
         for (int i = 0; i < NUM_MOVES_PER_STEP; i++)
@@ -86,7 +91,9 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
             //}
             //std::cout << std::endl;
 
-            newSlicingTree = makeMove(slicingTree);
+            SlicingTree new_stree = stree;
+
+            new_stree.makeMove();
 
             //for (int &i : newSlicingTree)
             //{
@@ -94,16 +101,16 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
             //}
             //std::cout << std::endl;
 
-            assert(isValidSlicingTree(newSlicingTree));
+            assert(new_stree.isValid());
 
-            Block new_block = scoreSlicingTree(newSlicingTree, separated_blocks);
+            Block new_block = new_stree.score();
  
             int new_score = new_block.area();
 
             if (new_score < min_score)
             {
                 min_score = new_score;
-                minSlicingTree = newSlicingTree;
+                min_stree = new_stree;
             }
 
             cost = new_score - current_score;
@@ -112,7 +119,7 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
             if (acceptMove(cost, temp))
             {
                 // Accept the move
-                slicingTree = newSlicingTree;
+                stree = new_stree;
                 current_score = new_score;
                 //std::cout << "accepted" << std::endl;
             }
@@ -124,256 +131,256 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
 
 
 
-    Block final_block = scoreSlicingTree(slicingTree, separated_blocks);
+    Block final_block = stree.score();
     int final_score = final_block.area();
 
     std::cout << "Final area: " << final_score << std::endl;
-    printSlicingTree(slicingTree);
+    std::cout << stree.toString() << std::endl;
 
     std::cout << "Min area: " << min_score << std::endl;
-    printSlicingTree(minSlicingTree);
+    std::cout << min_stree.toString() << std::endl;
 
     return final_blocks;
 }
 
-std::vector<int> makeMove(std::vector<int> slicingTree)
-{
-    std::vector<int> newSlicingTree = slicingTree;
+//std::vector<int> makeMove(std::vector<int> slicingTree)
+//{
+    //std::vector<int> newSlicingTree = slicingTree;
 
-    bool validMove = false;
+    //bool validMove = false;
 
-    while (not validMove)
-    {
-        int r1 = rand() % newSlicingTree.size();
-        int r2 = rand() % newSlicingTree.size();
+    //while (not validMove)
+    //{
+        //int r1 = rand() % newSlicingTree.size();
+        //int r2 = rand() % newSlicingTree.size();
 
-        std::vector<int> testSlicingTree = newSlicingTree;
+        //std::vector<int> testSlicingTree = newSlicingTree;
 
-        if (testSlicingTree[r1] < 0)
-        {
-            if (testSlicingTree[r1] == HORIZONTAL_SLICE)
-            {
-                testSlicingTree[r1] = VERTICAL_SLICE;
-            }
-            else
-            {
-                testSlicingTree[r1] = HORIZONTAL_SLICE;
-            }
-            validMove = true;
-            break;
-        }
+        //if (testSlicingTree[r1] < 0)
+        //{
+            //if (testSlicingTree[r1] == HORIZONTAL_SLICE)
+            //{
+                //testSlicingTree[r1] = VERTICAL_SLICE;
+            //}
+            //else
+            //{
+                //testSlicingTree[r1] = HORIZONTAL_SLICE;
+            //}
+            //validMove = true;
+            //break;
+        //}
 
-        int t = testSlicingTree[r1];
-        testSlicingTree[r1] = testSlicingTree[r2];
-        testSlicingTree[r2] = t;
+        //int t = testSlicingTree[r1];
+        //testSlicingTree[r1] = testSlicingTree[r2];
+        //testSlicingTree[r2] = t;
 
-        if (isValidSlicingTree(testSlicingTree))
-        {
-            validMove = true;
-            newSlicingTree = testSlicingTree;
-            break;
-        }
-        else
-        {
-            continue;
-        }
+        //if (isValidSlicingTree(testSlicingTree))
+        //{
+            //validMove = true;
+            //newSlicingTree = testSlicingTree;
+            //break;
+        //}
+        //else
+        //{
+            //continue;
+        //}
 
-        // Perform a random move
-        int move_type = rand() % 3;
+        //// Perform a random move
+        //int move_type = rand() % 3;
 
-        //std::cout << "Move type: " << move_type << std::endl;
+        ////std::cout << "Move type: " << move_type << std::endl;
 
 
-        if (move_type == 0)
-        {
-            // Move type 0:
-            // Exchange two operands that have no other operands in between
+        //if (move_type == 0)
+        //{
+            //// Move type 0:
+            //// Exchange two operands that have no other operands in between
 
-            int rand_index = rand() % newSlicingTree.size();        
+            //int rand_index = rand() % newSlicingTree.size();        
             
-            // Make sure index is not a slice
-            if (newSlicingTree[rand_index] >= 0)
-            {
-                // Choose a direction
-                int rand_dir = rand() % 2;
+            //// Make sure index is not a slice
+            //if (newSlicingTree[rand_index] >= 0)
+            //{
+                //// Choose a direction
+                //int rand_dir = rand() % 2;
 
-                if (rand_dir == 1)
-                {
-                    // Move positively to find a non-slice
-                    for (int i = 1; (rand_index + i) < newSlicingTree.size(); i++)
-                    {
-                        if ((rand_index + i) < newSlicingTree.size() and newSlicingTree[rand_index + i] >= 0)
-                        {
-                            // Swap indexes
-                            int temp = newSlicingTree[rand_index + i];
-                            newSlicingTree[rand_index + i] = newSlicingTree[rand_index];
-                            newSlicingTree[rand_index] = temp;
+                //if (rand_dir == 1)
+                //{
+                    //// Move positively to find a non-slice
+                    //for (int i = 1; (rand_index + i) < newSlicingTree.size(); i++)
+                    //{
+                        //if ((rand_index + i) < newSlicingTree.size() and newSlicingTree[rand_index + i] >= 0)
+                        //{
+                            //// Swap indexes
+                            //int temp = newSlicingTree[rand_index + i];
+                            //newSlicingTree[rand_index + i] = newSlicingTree[rand_index];
+                            //newSlicingTree[rand_index] = temp;
 
-                            validMove = true;
-                            break;
-                        }
-                    }
-                }
-                else
-                {
-                    // Move negatively to find a non-slice
-                    for (int i = 1; (rand_index - i) >= 0; i++)
-                    {
-                        if ((rand_index - i) >= 0 and newSlicingTree[rand_index - i] >= 0)
-                        {
-                            // Swap indexes
-                            int temp = newSlicingTree[rand_index - i];
-                            newSlicingTree[rand_index - i] = newSlicingTree[rand_index];
-                            newSlicingTree[rand_index] = temp;
+                            //validMove = true;
+                            //break;
+                        //}
+                    //}
+                //}
+                //else
+                //{
+                    //// Move negatively to find a non-slice
+                    //for (int i = 1; (rand_index - i) >= 0; i++)
+                    //{
+                        //if ((rand_index - i) >= 0 and newSlicingTree[rand_index - i] >= 0)
+                        //{
+                            //// Swap indexes
+                            //int temp = newSlicingTree[rand_index - i];
+                            //newSlicingTree[rand_index - i] = newSlicingTree[rand_index];
+                            //newSlicingTree[rand_index] = temp;
 
-                            validMove = true;
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-        else if (move_type == 1)
-        {
-            // Move type 1:
-            // Complement a series of operators between two operands
+                            //validMove = true;
+                            //break;
+                        //}
+                    //}
+                //}
+            //}
+        //}
+        //else if (move_type == 1)
+        //{
+            //// Move type 1:
+            //// Complement a series of operators between two operands
 
-            assert(newSlicingTree.size() >= 5);
+            //assert(newSlicingTree.size() >= 5);
 
-            // Choose a random index with a buffer of two items on either side
-            int rand_index = rand() % (newSlicingTree.size() - 4) + 2;
+            //// Choose a random index with a buffer of two items on either side
+            //int rand_index = rand() % (newSlicingTree.size() - 4) + 2;
 
-            // Item at index must not be a slice
-            if (newSlicingTree[rand_index] >= 0)
-            {
-                // Check if negative direction contains an operator
-                if (newSlicingTree[rand_index - 1] < 0)
-                {
-                    int ind = rand_index - 2;
-                    bool valid = false;
+            //// Item at index must not be a slice
+            //if (newSlicingTree[rand_index] >= 0)
+            //{
+                //// Check if negative direction contains an operator
+                //if (newSlicingTree[rand_index - 1] < 0)
+                //{
+                    //int ind = rand_index - 2;
+                    //bool valid = false;
 
-                    // Traverse in negative direction to find first non-operator
-                    while (ind >= 0)
-                    {
-                        if (newSlicingTree[ind] >= 0)
-                        {
-                            valid = true;
-                            break;
-                        }
-                        ind--;
-                    }
+                    //// Traverse in negative direction to find first non-operator
+                    //while (ind >= 0)
+                    //{
+                        //if (newSlicingTree[ind] >= 0)
+                        //{
+                            //valid = true;
+                            //break;
+                        //}
+                        //ind--;
+                    //}
 
-                    // Check if a valid sequence of operators was found
-                    if (valid)
-                    {
-                        // Invert all operators
+                    //// Check if a valid sequence of operators was found
+                    //if (valid)
+                    //{
+                        //// Invert all operators
                         
-                        for (int i = rand_index - 1; i > ind; i--)
-                        {
-                            assert(newSlicingTree[i] == HORIZONTAL_SLICE or newSlicingTree[i] == VERTICAL_SLICE);
+                        //for (int i = rand_index - 1; i > ind; i--)
+                        //{
+                            //assert(newSlicingTree[i] == HORIZONTAL_SLICE or newSlicingTree[i] == VERTICAL_SLICE);
 
-                            if (newSlicingTree[i] == HORIZONTAL_SLICE)
-                            {
-                                newSlicingTree[i] = VERTICAL_SLICE;
-                            }
-                            else
-                            {
-                                newSlicingTree[i] = HORIZONTAL_SLICE;
-                            }
-                        }
+                            //if (newSlicingTree[i] == HORIZONTAL_SLICE)
+                            //{
+                                //newSlicingTree[i] = VERTICAL_SLICE;
+                            //}
+                            //else
+                            //{
+                                //newSlicingTree[i] = HORIZONTAL_SLICE;
+                            //}
+                        //}
 
-                        validMove = true;
-                    }
-                }
-                // Check for operand in positive direction
-                else if (newSlicingTree[rand_index + 1] < 0) 
-                {
-                    int ind = rand_index + 2;
-                    bool valid = false;
+                        //validMove = true;
+                    //}
+                //}
+                //// Check for operand in positive direction
+                //else if (newSlicingTree[rand_index + 1] < 0) 
+                //{
+                    //int ind = rand_index + 2;
+                    //bool valid = false;
                     
-                    // Find next non-opeator
-                    while (ind < newSlicingTree.size())
-                    {
-                        if (newSlicingTree[ind] >= 0)
-                        {
-                            valid = true;
-                            break;
-                        }
-                        ind++;
-                    }
+                    //// Find next non-opeator
+                    //while (ind < newSlicingTree.size())
+                    //{
+                        //if (newSlicingTree[ind] >= 0)
+                        //{
+                            //valid = true;
+                            //break;
+                        //}
+                        //ind++;
+                    //}
 
-                    if (valid)
-                    {
-                        // Invert sequence of operators
-                        for (int i = rand_index + 1; i < ind; i++)
-                        {
-                            assert(newSlicingTree[i] == HORIZONTAL_SLICE or newSlicingTree[i] == VERTICAL_SLICE);
+                    //if (valid)
+                    //{
+                        //// Invert sequence of operators
+                        //for (int i = rand_index + 1; i < ind; i++)
+                        //{
+                            //assert(newSlicingTree[i] == HORIZONTAL_SLICE or newSlicingTree[i] == VERTICAL_SLICE);
 
-                            if (newSlicingTree[i] == HORIZONTAL_SLICE)
-                            {
-                                newSlicingTree[i] = VERTICAL_SLICE;
-                            }
-                            else
-                            {
-                                newSlicingTree[i] = HORIZONTAL_SLICE;
-                            }
-                        }
+                            //if (newSlicingTree[i] == HORIZONTAL_SLICE)
+                            //{
+                                //newSlicingTree[i] = VERTICAL_SLICE;
+                            //}
+                            //else
+                            //{
+                                //newSlicingTree[i] = HORIZONTAL_SLICE;
+                            //}
+                        //}
 
-                        validMove = true;
-                    }
+                        //validMove = true;
+                    //}
 
-                }
+                //}
 
-            }
+            //}
             
-        }
-        else
-        {
-            // Move type 3:
-            // Exchange adjacent operand and operator if the resulting expression still a normalized Polish exp.
+        //}
+        //else
+        //{
+            //// Move type 3:
+            //// Exchange adjacent operand and operator if the resulting expression still a normalized Polish exp.
 
-            int rand_index = rand() % newSlicingTree.size();        
+            //int rand_index = rand() % newSlicingTree.size();        
             
-            if (newSlicingTree[rand_index] >= 0)
-            {
-                if (rand_index + 1 < newSlicingTree.size() and (newSlicingTree[rand_index + 1] < 0))
-                {
-                    if (rand_index - 1 >= 0)
-                    {
-                        std::vector<int> testSlicingTree = newSlicingTree;
-                        int temp = testSlicingTree[rand_index];
-                        testSlicingTree[rand_index] = testSlicingTree[rand_index + 1];
-                        testSlicingTree[rand_index + 1] = temp;
+            //if (newSlicingTree[rand_index] >= 0)
+            //{
+                //if (rand_index + 1 < newSlicingTree.size() and (newSlicingTree[rand_index + 1] < 0))
+                //{
+                    //if (rand_index - 1 >= 0)
+                    //{
+                        //std::vector<int> testSlicingTree = newSlicingTree;
+                        //int temp = testSlicingTree[rand_index];
+                        //testSlicingTree[rand_index] = testSlicingTree[rand_index + 1];
+                        //testSlicingTree[rand_index + 1] = temp;
 
-                        if (isValidSlicingTree(testSlicingTree))
-                        {
-                            newSlicingTree = testSlicingTree;
-                            validMove = true;
-                        }
-                    }
-                }
-                else if (rand_index - 1 >= 0 and (newSlicingTree[rand_index - 1] < 0))
-                {
-                    if (rand_index + 1 < newSlicingTree.size())
-                    {
-                        std::vector<int> testSlicingTree = newSlicingTree;
-                        int temp = testSlicingTree[rand_index];
-                        testSlicingTree[rand_index] = testSlicingTree[rand_index - 1];
-                        testSlicingTree[rand_index - 1] = temp;
+                        //if (isValidSlicingTree(testSlicingTree))
+                        //{
+                            //newSlicingTree = testSlicingTree;
+                            //validMove = true;
+                        //}
+                    //}
+                //}
+                //else if (rand_index - 1 >= 0 and (newSlicingTree[rand_index - 1] < 0))
+                //{
+                    //if (rand_index + 1 < newSlicingTree.size())
+                    //{
+                        //std::vector<int> testSlicingTree = newSlicingTree;
+                        //int temp = testSlicingTree[rand_index];
+                        //testSlicingTree[rand_index] = testSlicingTree[rand_index - 1];
+                        //testSlicingTree[rand_index - 1] = temp;
                         
-                        if (isValidSlicingTree(testSlicingTree))
-                        {
-                            newSlicingTree = testSlicingTree;
-                            validMove = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
+                        //if (isValidSlicingTree(testSlicingTree))
+                        //{
+                            //newSlicingTree = testSlicingTree;
+                            //validMove = true;
+                        //}
+                    //}
+                //}
+            //}
+        //}
+    //}
 
-    return newSlicingTree;
-}
+    //return newSlicingTree;
+//}
 
 bool acceptMove(int cost, int temp)
 {
@@ -391,77 +398,77 @@ bool acceptMove(int cost, int temp)
     }
 }
 
-Block scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector<Block>> blocks)
-{
-    // Stack for evaluating slicing polish expression
-    std::vector<std::vector <Block>> stack;
+//Block scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector<Block>> blocks)
+//{
+    //// Stack for evaluating slicing polish expression
+    //std::vector<std::vector <Block>> stack;
 
-    // Go through all elements in polish slicing tree
-    for (int& i : slicingTree)
-    {
-        if (i == HORIZONTAL_SLICE)
-        {
-            // Stack must be atleast size 2
-            assert(stack.size() >= 2);
+    //// Go through all elements in polish slicing tree
+    //for (int& i : slicingTree)
+    //{
+        //if (i == HORIZONTAL_SLICE)
+        //{
+            //// Stack must be atleast size 2
+            //assert(stack.size() >= 2);
 
-            // Perform horizontal slice
-            std::vector<Block> a = stack.back();
-            stack.pop_back();
-            std::vector<Block> b = stack.back();
-            stack.pop_back();
+            //// Perform horizontal slice
+            //std::vector<Block> a = stack.back();
+            //stack.pop_back();
+            //std::vector<Block> b = stack.back();
+            //stack.pop_back();
 
-            std::vector<Block> comb = horizontalNodeSizing(a, b);
+            //std::vector<Block> comb = horizontalNodeSizing(a, b);
 
-            // Add result back to stack
-            stack.push_back(comb);
-        }
-        else if (i == VERTICAL_SLICE)
-        {
-            // Stack must be atleast size 2
-            assert(stack.size() >= 2);
+            //// Add result back to stack
+            //stack.push_back(comb);
+        //}
+        //else if (i == VERTICAL_SLICE)
+        //{
+            //// Stack must be atleast size 2
+            //assert(stack.size() >= 2);
 
-            // Perform vertical slice
-            std::vector<Block> a = stack.back();
-            stack.pop_back();
-            std::vector<Block> b = stack.back();
-            stack.pop_back();
+            //// Perform vertical slice
+            //std::vector<Block> a = stack.back();
+            //stack.pop_back();
+            //std::vector<Block> b = stack.back();
+            //stack.pop_back();
 
-            std::vector<Block> comb = verticalNodeSizing(a, b);
+            //std::vector<Block> comb = verticalNodeSizing(a, b);
 
-            // Add result back to stack
-            stack.push_back(comb);
-        }
-        else
-        {
-            // If not a slice, push blocks to stack
-            stack.push_back(blocks[i]);
-        }
-    }
+            //// Add result back to stack
+            //stack.push_back(comb);
+        //}
+        //else
+        //{
+            //// If not a slice, push blocks to stack
+            //stack.push_back(blocks[i]);
+        //}
+    //}
 
-    // We have reached the end of the polish expression
-    // There should be only a set of final areas remaining
-    //std::cout << stack.size() << std::endl;
-    assert(stack.size() == 1);
+    //// We have reached the end of the polish expression
+    //// There should be only a set of final areas remaining
+    ////std::cout << stack.size() << std::endl;
+    //assert(stack.size() == 1);
 
-    // All that is left to do is find the min area
-    int min_area = 1000000000;
-    Block min_area_block;
+    //// All that is left to do is find the min area
+    //int min_area = 1000000000;
+    //Block min_area_block;
 
 
-    for (Block& b : stack[0])
-    {
-        //std::cout << b << std::endl;
-        if (b.width * b.height < min_area)
-        {
-            min_area = b.width * b.height;
-            min_area_block = b;
-        }
-    }
+    //for (Block& b : stack[0])
+    //{
+        ////std::cout << b << std::endl;
+        //if (b.width * b.height < min_area)
+        //{
+            //min_area = b.width * b.height;
+            //min_area_block = b;
+        //}
+    //}
 
-    //std::cout << "Min block name: " << min_area_block->blockName << std::endl;
+    ////std::cout << "Min block name: " << min_area_block->blockName << std::endl;
 
-    return min_area_block;
-}
+    //return min_area_block;
+//}
 
 void sortByWidth(std::vector<Block> &blocks)
 {
@@ -597,58 +604,58 @@ std::vector<Block> horizontalNodeSizing(std::vector<Block> a, std::vector<Block>
 }
 
 // Check if a slicing tree is valid
-bool isValidSlicingTree(std::vector<int> slicingTree)
-{
-    int count = 0;
-    int previous = 0;
+//bool isValidSlicingTree(std::vector<int> slicingTree)
+//{
+    //int count = 0;
+    //int previous = 0;
 
-    for (int& i : slicingTree)
-    {
-        // Check if is a slice
-        if (i < 0)
-        {
-            if (count < 2)
-            {
-                return false;
-            }
+    //for (int& i : slicingTree)
+    //{
+        //// Check if is a slice
+        //if (i < 0)
+        //{
+            //if (count < 2)
+            //{
+                //return false;
+            //}
 
-            // Don't allow two of same slice in a row
-            if (i == previous)
-            {
-                return false;
-            }
+            //// Don't allow two of same slice in a row
+            //if (i == previous)
+            //{
+                //return false;
+            //}
 
-            count -= 1;
-        }
-        else
-        {
-            count += 1;
-        }
+            //count -= 1;
+        //}
+        //else
+        //{
+            //count += 1;
+        //}
 
-        previous = i;
-    }
+        //previous = i;
+    //}
 
-    return (count == 1);
+    //return (count == 1);
     
-}
+//}
 
-void printSlicingTree(std::vector<int> slicingTree)
-{
-    for (int& i : slicingTree)
-    {
-        if (i == HORIZONTAL_SLICE)
-        {
-            std::cout << "-";
-        }
-        else if (i == VERTICAL_SLICE)
-        {
-            std::cout << "|";
-        }
-        else
-        {
-            std::cout << i;
-        }
-    }
+//void printSlicingTree(std::vector<int> slicingTree)
+//{
+    //for (int& i : slicingTree)
+    //{
+        //if (i == HORIZONTAL_SLICE)
+        //{
+            //std::cout << "-";
+        //}
+        //else if (i == VERTICAL_SLICE)
+        //{
+            //std::cout << "|";
+        //}
+        //else
+        //{
+            //std::cout << i;
+        //}
+    //}
 
-    std::cout << std::endl;
-}
+    //std::cout << std::endl;
+//}
