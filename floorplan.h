@@ -11,8 +11,8 @@
 #define STARTING_TEMP 1000000
 #define FREEZING_TEMP 10
 
-#define NUM_MOVES_PER_STEP 100
-#define COOLING_FACTOR 0.995
+#define NUM_MOVES_PER_STEP 50
+#define COOLING_FACTOR 0.99
 
 #define boltz_k 1
 
@@ -26,7 +26,7 @@ std::vector<int> makeMove(std::vector<int> slicingTree);
 bool acceptMove(int cost, int temp);
 
 // Score a slicing tree
-int scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector <Block>> blocks);
+Block scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector <Block>> blocks);
 
 // Size a vertical slice of two sets of blocks
 std::vector<Block> verticalNodeSizing(std::vector<Block> a, std::vector<Block> b);

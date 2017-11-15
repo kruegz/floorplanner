@@ -12,7 +12,7 @@ public:
 	bool isSoft; // true for a soft-macro and null for a hard-macro
 	float width;
 	float height;
-	float area;
+	//float area;
 
 	// To keep track of slicing tree for incremental cost update
 	Block* parentBlock;
@@ -33,8 +33,7 @@ public:
         blockName("blank"),
         isSoft(false),
         height(0),
-        width(0),
-        area(0)
+        width(0)
     {};
 
 	Block(std::string blockName, bool isSoft, float height, float width) :
@@ -77,6 +76,11 @@ public:
     Block rotate()
     {
         return Block(blockName, isSoft, width, height);
+    }
+
+    float area()
+    {
+        return width * height;
     }
 
 };

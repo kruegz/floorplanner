@@ -31,12 +31,12 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
     
     // TEST ///////////////////////////////////////////////////////////////////
 
-    static const int arr[] = {5, 4, VERTICAL_SLICE, 7, VERTICAL_SLICE, 8, 0, HORIZONTAL_SLICE, VERTICAL_SLICE, 3, 6, VERTICAL_SLICE, 1, 2, VERTICAL_SLICE, HORIZONTAL_SLICE, VERTICAL_SLICE, 9, VERTICAL_SLICE};
-    std::vector<int> testTree (arr, arr + sizeof(arr) / sizeof(arr[0]) );
+    //static const int arr[] = {5, 4, VERTICAL_SLICE, 7, VERTICAL_SLICE, 8, 0, HORIZONTAL_SLICE, VERTICAL_SLICE, 3, 6, VERTICAL_SLICE, 1, 2, VERTICAL_SLICE, HORIZONTAL_SLICE, VERTICAL_SLICE, 9, VERTICAL_SLICE};
+    //std::vector<int> testTree (arr, arr + sizeof(arr) / sizeof(arr[0]) );
     
-    printSlicingTree(testTree);
-    int test_score = scoreSlicingTree(testTree, separated_blocks);
-    std::cout << "Test score: " << test_score << std::endl;
+    //printSlicingTree(testTree);
+    //int test_score = scoreSlicingTree(testTree, separated_blocks);
+    //std::cout << "Test score: " << test_score << std::endl;
 
     // ENDTEST ////////////////////////////////////////////////////////////////
 
@@ -75,7 +75,8 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
     {
         //std::cout << "Temp: " << temp << std::endl;
 
-        int current_score = scoreSlicingTree(slicingTree, separated_blocks);
+        Block current_block = scoreSlicingTree(slicingTree, separated_blocks);
+        int current_score = current_block.area();
 
         for (int i = 0; i < NUM_MOVES_PER_STEP; i++)
         {
@@ -95,7 +96,9 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
 
             assert(isValidSlicingTree(newSlicingTree));
 
-            int new_score = scoreSlicingTree(newSlicingTree, separated_blocks);
+            Block new_block = scoreSlicingTree(newSlicingTree, separated_blocks);
+ 
+            int new_score = new_block.area();
 
             if (new_score < min_score)
             {
@@ -121,8 +124,8 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
 
 
 
-    int final_score = scoreSlicingTree(slicingTree, separated_blocks);
-
+    Block final_block = scoreSlicingTree(slicingTree, separated_blocks);
+    int final_score = final_block.area();
 
     std::cout << "Final area: " << final_score << std::endl;
     printSlicingTree(slicingTree);
@@ -141,6 +144,40 @@ std::vector<int> makeMove(std::vector<int> slicingTree)
 
     while (not validMove)
     {
+        int r1 = rand() % newSlicingTree.size();
+        int r2 = rand() % newSlicingTree.size();
+
+        std::vector<int> testSlicingTree = newSlicingTree;
+
+        if (testSlicingTree[r1] < 0)
+        {
+            if (testSlicingTree[r1] == HORIZONTAL_SLICE)
+            {
+                testSlicingTree[r1] = VERTICAL_SLICE;
+            }
+            else
+            {
+                testSlicingTree[r1] = HORIZONTAL_SLICE;
+            }
+            validMove = true;
+            break;
+        }
+
+        int t = testSlicingTree[r1];
+        testSlicingTree[r1] = testSlicingTree[r2];
+        testSlicingTree[r2] = t;
+
+        if (isValidSlicingTree(testSlicingTree))
+        {
+            validMove = true;
+            newSlicingTree = testSlicingTree;
+            break;
+        }
+        else
+        {
+            continue;
+        }
+
         // Perform a random move
         int move_type = rand() % 3;
 
@@ -230,6 +267,7 @@ std::vector<int> makeMove(std::vector<int> slicingTree)
                     if (valid)
                     {
                         // Invert all operators
+                        
                         for (int i = rand_index - 1; i > ind; i--)
                         {
                             assert(newSlicingTree[i] == HORIZONTAL_SLICE or newSlicingTree[i] == VERTICAL_SLICE);
@@ -353,7 +391,7 @@ bool acceptMove(int cost, int temp)
     }
 }
 
-int scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector<Block>> blocks)
+Block scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector<Block>> blocks)
 {
     // Stack for evaluating slicing polish expression
     std::vector<std::vector <Block>> stack;
@@ -407,7 +445,7 @@ int scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector<Block
 
     // All that is left to do is find the min area
     int min_area = 1000000000;
-    Block *min_area_block;
+    Block min_area_block;
 
 
     for (Block& b : stack[0])
@@ -416,13 +454,13 @@ int scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector<Block
         if (b.width * b.height < min_area)
         {
             min_area = b.width * b.height;
-            min_area_block = &b;
+            min_area_block = b;
         }
     }
 
     //std::cout << "Min block name: " << min_area_block->blockName << std::endl;
 
-    return min_area;
+    return min_area_block;
 }
 
 void sortByWidth(std::vector<Block> &blocks)
@@ -478,6 +516,7 @@ std::vector<Block> verticalNodeSizing(std::vector<Block> a, std::vector<Block> b
 
         new_width = current_a.width + current_b.width;
         new_height = std::max(current_a.height, current_b.height);
+
 
         Block new_block(current_a.blockName + "|" + current_b.blockName, false, new_height, new_width, &current_a, &current_b);
 
