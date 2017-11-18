@@ -29,18 +29,20 @@ bool acceptMove(int cost, int temp);
 Block scoreSlicingTree(std::vector<int> slicingTree, std::vector<std::vector <Block>> blocks);
 
 // Size a vertical slice of two sets of blocks
-std::vector<Block> verticalNodeSizing(std::vector<Block> a, std::vector<Block> b);
+void verticalNodeSizing(Block* a, Block* b, Block *result);
 
 // Size a horizontal slice of two sets of blocks
-std::vector<Block> horizontalNodeSizing(std::vector<Block> a, std::vector<Block> b);
+void horizontalNodeSizing(Block* a, Block* b, Block *result);
 
 // Functions to sort Block objects
-void sortByHeight(std::vector<Block> &blocks);
-void sortByWidth(std::vector<Block> &blocks);
+void sortByHeight(Block *b);
+void sortByWidth(Block *b);
 
 // Check if a slicing tree is valid
 bool isValidSlicingTree(std::vector<int> slicingTree);
 
 void printSlicingTree(std::vector<int> slicingTree);
+
+void deleteSuperBlock(Block *b);
 
 #endif

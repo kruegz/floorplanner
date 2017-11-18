@@ -7,27 +7,27 @@ class SlicingTree
 {
     public:
 
-        // The tree as indexes and slices
-        std::vector<int> tree;
-
         // The blocks of the tree
-        std::vector<std::vector<Block>> blocks;
+        std::vector<Block*> blocks;
 
         
         // Default constructor
         SlicingTree() :
-            tree(0),
             blocks(0)
         {};
         
         // Constructor
-        SlicingTree(std::vector<int> tree, std::vector<std::vector <Block>> blocks) :
-            tree(tree),
+        SlicingTree(std::vector<Block*> blocks) :
             blocks(blocks)
         {};
 
+        // Destructor
+        ~SlicingTree();
+        
+        SlicingTree(std::vector<Block> blocks);
+
         // Perform a move
-        void makeMove();
+        double makeMove();
 
         // Check if tree is valid
         bool isValid();
@@ -38,8 +38,21 @@ class SlicingTree
         // Convert to string
         std::string toString();
 
-        // Find minimum area
-        Block score();
+        // Score a single block
+        void scoreSingle(Block *b);
+        
+        // Score a block and all parents recursively
+        double scoreUp(Block *b);
+
+        // Compute areas
+        double score();
+
+        // Overload assignment
+        SlicingTree& operator= (const SlicingTree &s);
+
+        // Get coordinates
+        std::string getCoords();
+
 };
 
 

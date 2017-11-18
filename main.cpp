@@ -45,8 +45,15 @@ Block parseLine(std::string line)
 
     width = stof(width_str);
     height = stof(height_str);
+
+    WidthHeight wh(width, height, -1, -1);
+
+    std::vector<WidthHeight> whs;
+
+    whs.push_back(wh);
+    whs.push_back(wh.rotate());
     
-    Block b(name, false, width, height);
+    Block b(name, false, whs);
 
     return b;
 }
@@ -79,8 +86,6 @@ std::vector<Block> readBlocksFromFile(char *filename)
         getline(fin, line);
 
         std::string name;
-        char g;
-        int width, height;
 
         // Read soft blocks
         for (int i = 0; i < num_soft_blocks; i++)

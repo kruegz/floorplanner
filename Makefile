@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-c -Wall -std=c++11 -O3
+CFLAGS=-c -Wall -std=c++11 -g
 LDFLAGS=
 
 SOURCES=main.cpp floorplan.cpp slicing_tree.cpp

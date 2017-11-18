@@ -2,46 +2,104 @@
 #include <vector>
 #include <cassert>
 #include <string>
+#include <limits>
+#include <unistd.h>
 
 #include "slicing_tree.h"
 #include "block.h"
 #include "floorplan.h"
 
 
-// Perform a move
-void SlicingTree::makeMove()
-{
 
+SlicingTree::SlicingTree(std::vector<Block> blks)
+{
+    for (Block &b : blks)
+    {
+        Block *new_b = new Block;
+        *new_b = b;
+        blocks.push_back(new_b);
+    }
+
+    for (int i = 0; i < blks.size() - 1; i++)
+    {
+        if (i & 1)
+        {
+            blocks.push_back(new Block("|"));
+        }
+        else
+        {
+            blocks.push_back(new Block("-"));
+        }
+    }
+}
+
+// Perform a move and return the new score
+double SlicingTree::makeMove()
+{
+    double new_score;
     bool validMove = false;
 
     while (not validMove)
     {
         // Perform one of two random moves
         int move_type = rand() & 1;
+        //std::cout << "Move type: " << move_type << std::endl;
+        //usleep(100000);
 
         if (move_type)
         {
             // Move type 1:
             // Attempt to complement a slice
-            int rand_index = rand() % tree.size();
+            int rand_index = rand() % blocks.size();
 
-            int old_value = tree[rand_index];
+            //int old_value = tree[rand_index];
+            Block *b = blocks[rand_index];
+
+            //std::cout << "Rand index: " << rand_index << std::endl;
 
             // Check if random index is a slice
-            if (old_value < 0)
+            if (b->blockName == "|")
             {
                 // Complement the slice
-                tree[rand_index] = (old_value == HORIZONTAL_SLICE) ? VERTICAL_SLICE : HORIZONTAL_SLICE;
+                b->blockName = "-";
+
+                //std::cout << toString() << std::endl;
 
                 if (isValid())
                 {
+                    // Calculate new scores
+                    //std::cout << "before scoreup" << std::endl;
+                    new_score = score();
+                    //std::cout << "after scoreup" << std::endl;
+
                     validMove = true;
-                    break;
                 }
                 else
                 {
                     // Fix tree
-                    tree[rand_index] = old_value;
+                    b->blockName = "|";
+                }
+            }
+            else if (b->blockName == "-")
+            {
+                // Complement the slice
+                b->blockName = "|";
+
+                //std::cout << toString() << std::endl;
+
+                if (isValid())
+                {
+                    // Calculate new scores
+                    //std::cout << "before scoreup" << std::endl;
+                    new_score = score();
+                    //std::cout << "after scoreup" << std::endl;
+
+                    validMove = true;
+                }
+                else
+                {
+                    // Fix tree
+                    b->blockName = "-";
                 }
             }
         }
@@ -50,43 +108,65 @@ void SlicingTree::makeMove()
             // Move type 2:
             // Swap two elements of the tree (either slices or indexes) as long
             // as valid polish tree results
-            int r1 = rand() % tree.size();
-            int r2 = rand() % tree.size();
+            int r1 = rand() % blocks.size();
+            int r2 = rand() % blocks.size();
 
-            swap(r1, r2);
+            // Make sure indexes are not the same
+            while (r2 == r1)
+            {
+                r2 = rand() % blocks.size();
+            }
+            
+            //std::cout << "r1 r2 " << r1 << " " << r2 << std::endl;
+
+            //Block tmp = *blocks[r1];
+            //*blocks[r1] = *blocks[r2];
+            //*blocks[r2] = tmp;
+            std::swap(blocks[r1], blocks[r2]);
+                
+            //std::cout << toString() << std::endl;
 
             if (isValid())
             {
+                // Score from bottom
+                new_score = score();
                 validMove = true;
-                break;
             }
             else
             {
                 // Fix tree
-                swap(r1, r2);
+                //Block tmp = *blocks[r1];
+                //*blocks[r1] = *blocks[r2];
+                //*blocks[r2] = tmp;
+                std::swap(blocks[r1], blocks[r2]);
             }
         }
     }
+
+    return new_score;
 }
 
 // Swap two elements in the slicing tree
-void SlicingTree::swap(int i, int j)
-{
-    int tmp = tree[i];
-    tree[i] = tree[j];
-    tree[j] = tmp;
-}
+//void SlicingTree::swap(int i, int j)
+//{
+    //int tmp = tree[i];
+    //tree[i] = tree[j];
+    //tree[j] = tmp;
+//}
 
 // Check if tree is valid
 bool SlicingTree::isValid()
 {
     int count = 0;
-    int previous = 0;
+    std::string prev_name;
+    std::string new_name;
 
-    for (int& i : tree)
+    for (Block *b : blocks)
     {
         // Check if is a slice
-        if (i < 0)
+        new_name = b->blockName;
+
+        if (new_name == "|" or new_name == "-")
         {
             if (count < 2)
             {
@@ -94,18 +174,19 @@ bool SlicingTree::isValid()
             }
 
             // Don't allow two of same slice in a row
-            if (i == previous)
+            if (new_name == prev_name)
             {
                 return false;
             }
 
             count -= 1;
-            previous = i;
         }
         else
         {
             count += 1;
         }
+        
+        prev_name = new_name;
 
     }
 
@@ -115,72 +196,157 @@ bool SlicingTree::isValid()
 // Convert to string
 std::string SlicingTree::toString()
 {
-    std::string s;
+    std::stringstream str;
 
-    for (int& i : tree)
+    for (Block *b : blocks)
     {
-        if (i == HORIZONTAL_SLICE)
-        {
-            s += "-";
-        }
-        else if (i == VERTICAL_SLICE)
-        {
-            s += "|";
-        }
-        else
-        {
-            s += std::to_string(i);
-        }
+        str << b->blockName << " ";
     }
 
-    return s;
+    return str.str();
+}
+
+void printVector(std::vector<Block*> blocks)
+{
+    for (Block *b : blocks)
+    {
+        std::cout << *b << std::endl;
+    }
+}
+
+//Block * copySuperBlock(Block *b)
+//{
+    //if (b != NULL)
+    //{
+        //Block *new_block = new Block;
+        //*new_block = b;
+        //new_block->leftChild = copySuperBlock(b->leftChild);
+        //new_block->rightChild = copySuperBlock(b->rightChild);
+    //}
+    //else
+    //{
+        //return NULL;
+    //}
+
+//}
+
+void SlicingTree::scoreSingle(Block *b)
+{
+    if (b->blockName == "|")
+    {
+        assert(b->leftChild != NULL);
+        assert(b->rightChild != NULL);
+
+        verticalNodeSizing(b->leftChild, b->rightChild, b);
+    }
+    else if (b->blockName == "-")
+    {
+        assert(b->leftChild != NULL);
+        assert(b->rightChild != NULL);
+
+        horizontalNodeSizing(b->leftChild, b->rightChild, b);
+    }
+}
+
+// Score the current block and all parents recursively
+// Return the new min area
+double SlicingTree::scoreUp(Block *b)
+{
+    scoreSingle(b);
+
+    // Check if we have a parent
+    if (b->parentBlock != NULL)
+    {
+        // Return the parent score
+        return scoreUp(b->parentBlock);
+    }
+    else
+    {
+        // We are root
+        // Return min area
+        double min_area = std::numeric_limits<double>::max();
+
+        assert(b->widths_heights.size() >= 1);
+
+        for (WidthHeight &wh : b->widths_heights)
+        {
+            double area = wh.width * wh.height;
+
+            if (area < min_area)
+            {
+                min_area = area;
+            }
+        }
+
+        assert(min_area != std::numeric_limits<double>::max());
+        
+        return min_area;
+    }
 }
 
 // Find minimum area
-Block SlicingTree::score()
+// Return index of best area in root block
+double SlicingTree::score()
 {
     // Stack for evaluating slicing polish expression
-    std::vector<std::vector <Block>> stack;
+    std::vector<Block*> stack;
 
     // Go through all elements in polish slicing tree
-    for (int& i : tree)
+    for (Block *i : blocks)
     {
-        if (i == HORIZONTAL_SLICE)
+        //std::cout << i->blockName << std::endl;
+        if (i->blockName == "-")
         {
             // Stack must be atleast size 2
             assert(stack.size() >= 2);
 
             // Perform horizontal slice
-            std::vector<Block> a = stack.back();
+            Block *a = stack.back();
             stack.pop_back();
-            std::vector<Block> b = stack.back();
+            Block *b = stack.back();
             stack.pop_back();
 
-            std::vector<Block> comb = horizontalNodeSizing(a, b);
+            // Mark parent
+            a->parentBlock = i;
+            b->parentBlock = i;
+            i->leftChild = a;
+            i->rightChild = b;
+
+            // Compute sizes storing in i
+            horizontalNodeSizing(a, b, i);
 
             // Add result back to stack
-            stack.push_back(comb);
+            stack.push_back(i);
         }
-        else if (i == VERTICAL_SLICE)
+        else if (i->blockName == "|")
         {
             // Stack must be atleast size 2
             assert(stack.size() >= 2);
 
             // Perform vertical slice
-            std::vector<Block> a = stack.back();
+            Block *a = stack.back();
             stack.pop_back();
-            std::vector<Block> b = stack.back();
+            Block *b = stack.back();
             stack.pop_back();
+            
+            // Mark parent
+            a->parentBlock = i;
+            b->parentBlock = i;
+            i->leftChild = a;
+            i->rightChild = b;
 
-            std::vector<Block> comb = verticalNodeSizing(a, b);
+
+            // Compute sizes storing in i
+            verticalNodeSizing(a, b, i);
+
 
             // Add result back to stack
-            stack.push_back(comb);
+            stack.push_back(i);
         }
         else
         {
             // If not a slice, push blocks to stack
-            stack.push_back(blocks[i]);
+            stack.push_back(i);
         }
     }
 
@@ -190,21 +356,61 @@ Block SlicingTree::score()
     assert(stack.size() == 1);
 
     // All that is left to do is find the min area
-    int min_area = 1000000000;
-    Block min_area_block;
+    double min_area = std::numeric_limits<double>::max();
+    int min_area_index = -1;
+
+    assert(stack[0]->widths_heights.size() >= 1);
 
 
-    for (Block& b : stack[0])
+    for (int i = 0; i < stack[0]->widths_heights.size(); i++)
     {
-        //std::cout << b << std::endl;
-        if (b.width * b.height < min_area)
+        //std::cout << *b << std::endl;
+        double new_area = stack[0]->widths_heights[i].width * stack[0]->widths_heights[i].height;
+
+        if (new_area < min_area)
         {
-            min_area = b.width * b.height;
-            min_area_block = b;
+            min_area = new_area;
+            min_area_index = i;
         }
     }
 
+    assert(min_area_index != -1);
+
     //std::cout << "Min block name: " << min_area_block->blockName << std::endl;
 
-    return min_area_block;
+    return min_area;
+}
+        
+SlicingTree& SlicingTree::operator= (const SlicingTree &s)
+{
+    std::vector<Block*> new_blocks;
+
+    for (Block *b : s.blocks)
+    {
+        Block *new_b = new Block;
+        *new_b = *b;
+        new_blocks.push_back(new_b);
+        //std::cout << "orig b" << *b << std::endl;
+        //std::cout << "new b" << *new_b << std::endl;
+    }
+
+    blocks = new_blocks;
+
+    return *this;
+}
+
+SlicingTree::~SlicingTree()
+{
+    for (Block *b : blocks)
+    {
+        delete b;
+    }
+}
+        
+// Get coordinates
+std::string SlicingTree::getCoords()
+{
+    std::string s;
+    return s;
+    
 }
