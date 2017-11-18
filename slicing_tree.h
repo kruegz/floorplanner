@@ -50,6 +50,9 @@ class SlicingTree
         // Overload assignment
         SlicingTree& operator= (const SlicingTree &s);
 
+        // Recursively compute coordinates
+        void computeCoords(Block *b, int wh_index);
+
         // Get coordinates
         std::string getCoords();
 

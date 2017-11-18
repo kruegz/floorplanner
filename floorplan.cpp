@@ -5,13 +5,14 @@
 #include <stdlib.h>
 #include <time.h>
 #include <climits>
+#include <fstream>
 
 #include "floorplan.h"
 #include "block.h"
 #include "slicing_tree.h"
 
 
-std::vector<Block> floorplan(std::vector<Block> blocks)
+std::vector<Block> floorplan(std::vector<Block> blocks, std::string filename)
 {
 
     srand(time(NULL));
@@ -175,7 +176,7 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
         temp = COOLING_FACTOR * temp;
     }
 
-    double final_area = min_score;
+    double final_area = min_stree.score();
 
     std::cout << "Final area: " << final_area << std::endl;
     std::cout << "Final stree: " << stree.toString() << std::endl;
@@ -197,7 +198,7 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
 
     for (Block &b : blocks)
     {
-        white_area += b.widths_heights[0].width * b.widths_heights[0].height;
+        white_area += b.widths_heights[0].area();
     }
 
     std::cout << "White area: " << white_area << std::endl;
@@ -211,6 +212,22 @@ std::vector<Block> floorplan(std::vector<Block> blocks)
 
     //std::cout << "Min area: " << min_score << std::endl;
     //std::cout << min_stree.toString() << std::endl;
+
+    std::cout << min_stree.getCoords() << std::endl;
+
+    // Write to output file
+    std::string output_file = filename.substr(0,filename.find_last_of('.'))+".out";
+
+    std::ofstream out_file;
+    out_file.open(output_file);
+
+    out_file << "Final area = " << final_area << std::endl;
+    out_file << "Black area = " << black_area << std::endl << std::endl;
+
+    out_file << "block_name lower_left(x,y)coordinate upper_right(x,y)coordinate" << std::endl;
+    out_file << min_stree.getCoords() << std::endl;
+
+    out_file.close();
 
     return final_blocks;
 }

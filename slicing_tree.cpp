@@ -365,7 +365,7 @@ double SlicingTree::score()
     for (int i = 0; i < stack[0]->widths_heights.size(); i++)
     {
         //std::cout << *b << std::endl;
-        double new_area = stack[0]->widths_heights[i].width * stack[0]->widths_heights[i].height;
+        double new_area = stack[0]->widths_heights[i].area();
 
         if (new_area < min_area)
         {
@@ -406,11 +406,120 @@ SlicingTree::~SlicingTree()
         delete b;
     }
 }
+
+// Recursively compute coordinates
+void SlicingTree::computeCoords(Block *b, int wh_index)
+{
+    if (b->blockName == "|")
+    {
+        assert(b->leftChild != NULL);
+        assert(b->rightChild != NULL);
+
+        // Get specific indexes in children
+        int left_child_index = b->widths_heights[wh_index].left_index;
+        int right_child_index = b->widths_heights[wh_index].right_index;
+
+        // Set child indexes
+        b->leftChild->wh_index = left_child_index;
+        b->rightChild->wh_index = right_child_index;
+
+        // Get left child width
+        double left_width = b->leftChild->widths_heights[left_child_index].width;
+
+        // Set left child coords
+        b->leftChild->xCoordinate = b->xCoordinate;
+        b->leftChild->yCoordinate = b->yCoordinate;
+        
+        // Set right child coords
+        b->rightChild->xCoordinate = b->xCoordinate + left_width;
+        b->rightChild->yCoordinate = b->yCoordinate;
+
+        // Recurse
+        computeCoords(b->leftChild, left_child_index);
+        computeCoords(b->rightChild, right_child_index);
+
+    }
+    else if (b->blockName == "-")
+    {
+        assert(b->leftChild != NULL);
+        assert(b->rightChild != NULL);
+
+        // Get specific indexes in children
+        int left_child_index = b->widths_heights[wh_index].left_index;
+        int right_child_index = b->widths_heights[wh_index].right_index;
+
+        // Set child indexes
+        b->leftChild->wh_index = left_child_index;
+        b->rightChild->wh_index = right_child_index;
+
+        // Get left child height
+        double left_height = b->leftChild->widths_heights[left_child_index].height;
+
+        // Set left child coords
+        b->leftChild->xCoordinate = b->xCoordinate;
+        b->leftChild->yCoordinate = b->yCoordinate;
+        
+        // Set right child coords
+        b->rightChild->xCoordinate = b->xCoordinate;
+        b->rightChild->yCoordinate = b->yCoordinate + left_height;
+
+        // Recurse
+        computeCoords(b->leftChild, left_child_index);
+        computeCoords(b->rightChild, right_child_index);
+    }
+    else
+    {
+        // Leaf node
+        assert(b->wh_index != -1);
+    }
+    
+    //std::cout << *b << std::endl;
+}
         
 // Get coordinates
 std::string SlicingTree::getCoords()
 {
-    std::string s;
-    return s;
+    std::stringstream s;
+
+    // Find min area index
+    Block *root = blocks[blocks.size() - 1];
+
+    assert(root->blockName == "|" or root->blockName == "-");
+
+    int min_index = -1;
+    double min_area = std::numeric_limits<double>::max();
+
+    for (int i = 0; i < root->widths_heights.size() - 1; i++)
+    {
+        if (root->widths_heights[i].area() < min_area)
+        {
+            min_area = root->widths_heights[i].area();
+            min_index = i;
+        }
+    }
+
+    assert(min_index != -1);
+
+    // Compute coords
+    computeCoords(root, min_index);
+
+
+    // Print coords
+    for (Block *b : blocks)
+    {
+        if (b->blockName != "|" and b->blockName != "-")
+        {
+            assert(b->wh_index != -1);
+
+            double sx = b->xCoordinate;
+            double sy = b->yCoordinate;
+            double ex = b->xCoordinate + b->widths_heights[b->wh_index].width;
+            double ey = b->yCoordinate + b->widths_heights[b->wh_index].height;
+
+            s << b->blockName << " (" << sx << ", " << sy << ") (" << ex << ", " << ey << ")" << std::endl;
+        }
+    }
     
+
+    return s.str();
 }

@@ -181,7 +181,7 @@ int main(int argc, char *argv[])
         //std::cout << b << std::endl;
     //}
 
-    std::vector<Block> final_blocks = floorplan(blocks);
+    std::vector<Block> final_blocks = floorplan(blocks, filename);
 
     
 

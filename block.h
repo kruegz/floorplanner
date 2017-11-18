@@ -58,6 +58,8 @@ public:
     std::vector<WidthHeight> widths_heights;
     //std::vector<double> areas;
 
+    int wh_index;
+
 	// To keep track of slicing tree for incremental cost update
     Block *leftChild;
     Block *rightChild;
@@ -88,9 +90,12 @@ public:
         blockName("blank"),
         isSoft(false),
         widths_heights(0),
+        wh_index(-1),
         //areas(0),
         leftChild(NULL),
         rightChild(NULL),
+        xCoordinate(0),
+        yCoordinate(0),
         parentBlock(NULL)
     {};
     
@@ -98,9 +103,12 @@ public:
         blockName(name),
         isSoft(false),
         widths_heights(0),
+        wh_index(-1),
         //areas(0),
         leftChild(NULL),
         rightChild(NULL),
+        xCoordinate(0),
+        yCoordinate(0),
         parentBlock(NULL)
     {};
 
@@ -108,10 +116,13 @@ public:
         blockName(blockName),
         isSoft(isSoft),
         widths_heights(widths_heights),
+        wh_index(-1),
         //areas(compute_areas),
         //child_slice(0),
         leftChild(NULL),
         rightChild(NULL),
+        xCoordinate(0),
+        yCoordinate(0),
         parentBlock(NULL)
     {};
 	
@@ -119,10 +130,13 @@ public:
         blockName(blockName),
         isSoft(isSoft),
         widths_heights(widths_heights),
+        wh_index(-1),
         //areas(compute_areas),
         //child_slice(0),
         leftChild(lchild),
         rightChild(rchild),
+        xCoordinate(0),
+        yCoordinate(0),
         parentBlock(parent)
     {};
 
@@ -151,6 +165,7 @@ public:
         stringStream << " Parent: " << parentBlock;
         stringStream << " Left Child: " << leftChild;
         stringStream << " Right Child: " << rightChild;
+        stringStream << " wh_index: " << wh_index;
         stringStream << " (widths, heights): ";
         
         for (const WidthHeight & wh : widths_heights)

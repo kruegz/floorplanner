@@ -17,7 +17,7 @@
 #define boltz_k 1
 
 // Perform floor planning using simulated annealing
-std::vector<Block> floorplan(std::vector<Block> blocks);
+std::vector<Block> floorplan(std::vector<Block> blocks, std::string filename);
 
 // Make a valid move to a slicing tree for simulated annealing
 std::vector<int> makeMove(std::vector<int> slicingTree);
