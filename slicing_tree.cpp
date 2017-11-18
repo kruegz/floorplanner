@@ -383,6 +383,13 @@ double SlicingTree::score()
         
 SlicingTree& SlicingTree::operator= (const SlicingTree &s)
 {
+
+    // Clear old blocks
+    for (Block *b : blocks)
+    {
+        delete b;
+    }
+
     std::vector<Block*> new_blocks;
 
     for (Block *b : s.blocks)

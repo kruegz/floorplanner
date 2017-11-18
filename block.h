@@ -94,9 +94,9 @@ public:
         //areas(0),
         leftChild(NULL),
         rightChild(NULL),
+        parentBlock(NULL),
         xCoordinate(0),
-        yCoordinate(0),
-        parentBlock(NULL)
+        yCoordinate(0)
     {};
     
     Block(std::string name) :
@@ -107,9 +107,9 @@ public:
         //areas(0),
         leftChild(NULL),
         rightChild(NULL),
+        parentBlock(NULL),
         xCoordinate(0),
-        yCoordinate(0),
-        parentBlock(NULL)
+        yCoordinate(0)
     {};
 
 	Block(std::string blockName, bool isSoft, std::vector<WidthHeight> widths_heights) :
@@ -121,9 +121,9 @@ public:
         //child_slice(0),
         leftChild(NULL),
         rightChild(NULL),
+        parentBlock(NULL),
         xCoordinate(0),
-        yCoordinate(0),
-        parentBlock(NULL)
+        yCoordinate(0)
     {};
 	
     Block(std::string blockName, bool isSoft, std::vector<WidthHeight> widths_heights, Block *lchild, Block *rchild, Block *parent) :
@@ -135,9 +135,9 @@ public:
         //child_slice(0),
         leftChild(lchild),
         rightChild(rchild),
+        parentBlock(parent),
         xCoordinate(0),
-        yCoordinate(0),
-        parentBlock(parent)
+        yCoordinate(0)
     {};
 
 

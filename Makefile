@@ -16,4 +16,6 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm *.o floorplanner
+	-rm *.o 
+	-rm floorplanner
+	-rm -r floorplanner.dSYM
