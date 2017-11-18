@@ -403,7 +403,10 @@ SlicingTree::~SlicingTree()
 {
     for (Block *b : blocks)
     {
-        delete b;
+        if (b != NULL)
+        {
+            delete b;
+        }
     }
 }
 

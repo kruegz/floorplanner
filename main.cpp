@@ -9,6 +9,7 @@
 
 #include "block.h"
 #include "floorplan.h"
+#include "slicing_tree.h"
 
 template<typename Out> 
 void split(const std::string &s, char delim, Out result) {
@@ -58,7 +59,7 @@ Block parseLine(std::string line)
     return b;
 }
 
-std::vector<Block> readBlocksFromFile(char *filename)
+std::vector<Block> readBlocksFromFile(std::string filename)
 {
     std::vector<Block> blocks;
 
@@ -117,6 +118,51 @@ std::vector<Block> readBlocksFromFile(char *filename)
     return blocks;
 }
 
+void outputSolution(SlicingTree *st, std::string filename)
+{
+    // Get the final area of the minimum slicing tree
+    double final_area = st->score();
+
+    std::cout << "Final stree: " << st->toString() << std::endl;
+    std::cout << "Final area: " << final_area << std::endl;
+
+
+    // Compute white area
+    double white_area = 0;
+
+    for (Block *b : st->blocks)
+    {
+        // Only add up areas for original blocks
+        if (b->blockName != "|" and b->blockName != "-")
+        {
+            double block_area = b->widths_heights[0].area();
+            //std::cout << block_area << std::endl;
+            white_area += block_area;
+        }
+    }
+
+    //std::cout << "White area: " << white_area << std::endl;
+
+    // Compute black area
+    double black_area = final_area - white_area;
+
+    std::cout << "Black area: " << black_area << std::endl;
+    std::cout << "Black area percent: " << black_area / final_area << std::endl;
+
+    // Write to output file
+
+    std::ofstream out_file(filename);
+
+    out_file << "Final area = " << final_area << std::endl;
+    out_file << "Black area = " << black_area << std::endl << std::endl;
+
+    out_file << "block_name lower_left(x,y)coordinate upper_right(x,y)coordinate" << std::endl;
+    out_file << st->getCoords() << std::endl;
+
+    out_file.close();
+
+}
+
 int main(int argc, char *argv[])
 {
     if (argc != 2)
@@ -125,65 +171,19 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
 
-    char *filename = argv[1];
-    
+    std::string filename = argv[1];
+   
+    // Read blocks
     std::vector<Block> blocks = readBlocksFromFile(filename);
 
-    //for (Block& b : blocks)
-    //{
-        //std::cout << b << std::endl;
-    //}
+    // Create the output file
+    std::string output_file = filename.substr(0,filename.find_last_of('.'))+".out";
 
-    //std::cout << "==================================" << std::endl;
+    // Perform the floorplanning
+    SlicingTree *st = floorplan(blocks);
+
+    // Output the solution
+    outputSolution(st, output_file);
     
-    //std::vector<Block>::const_iterator start = blocks.begin();
-    //std::vector<Block>::const_iterator end = blocks.begin() + 4;
-    //std::vector<Block> a(start, end);
-    ////a.push_back(blocks[0]);
-
-    //start = blocks.begin() + 5;
-    //end = blocks.end();
-    //std::vector<Block> b(start, end);
-    //a.push_back(blocks[1]);
-
-    //std::vector<Block> vert = verticalNodeSizing(a, b);
-
-    //std::vector<std::vector <Block>> test_blocks;
-
-    //std::vector<Block> b1;
-    //b1.push_back(Block("b1", false, 3, 4));
-    //test_blocks.push_back(b1);
-    //std::vector<Block> b2;
-    //b2.push_back(Block("b2", false, 2, 1));
-    //test_blocks.push_back(b2);
-    //std::vector<Block> b3;
-    //b3.push_back(Block("b3", false, 5, 9));
-    //test_blocks.push_back(b3);
-    //std::vector<Block> b4;
-    //b4.push_back(Block("b4", false, 2, 2));
-    //test_blocks.push_back(b4);
-
-    //std::vector<int> plan;
-    //plan.push_back(0);
-    //plan.push_back(1);
-    //plan.push_back(HORIZONTAL_SLICE);
-    //plan.push_back(2);
-    //plan.push_back(VERTICAL_SLICE);
-    //plan.push_back(3);
-    //plan.push_back(HORIZONTAL_SLICE);
-
-    //std::vector<Block> v = verticalNodeSizing(b1, b2);
-
-
-
-    //for (Block& b : vert)
-    //{
-        //std::cout << b << std::endl;
-    //}
-
-    std::vector<Block> final_blocks = floorplan(blocks, filename);
-
-    
-
     return 0;
 }

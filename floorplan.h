@@ -4,11 +4,12 @@
 #include <vector>
 
 #include "block.h"
+#include "slicing_tree.h"
 
 #define HORIZONTAL_SLICE -1
 #define VERTICAL_SLICE -2
 
-#define STARTING_TEMP 1000000
+#define STARTING_TEMP 10000000
 #define FREEZING_TEMP 10
 
 #define NUM_MOVES_PER_STEP 50
@@ -17,7 +18,7 @@
 #define boltz_k 1
 
 // Perform floor planning using simulated annealing
-std::vector<Block> floorplan(std::vector<Block> blocks, std::string filename);
+SlicingTree* floorplan(std::vector<Block> blocks);
 
 // Make a valid move to a slicing tree for simulated annealing
 std::vector<int> makeMove(std::vector<int> slicingTree);

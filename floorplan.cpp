@@ -12,31 +12,11 @@
 #include "slicing_tree.h"
 
 
-std::vector<Block> floorplan(std::vector<Block> blocks, std::string filename)
+SlicingTree* floorplan(std::vector<Block> blocks)
 {
 
     srand(time(NULL));
     std::vector<Block> final_blocks;
-
-    // Separate blocks and add their rotations
-
-    //std::vector <Block*> blocks;
-
-    //for (Block b : blocks)
-    //{
-        //std::vector<Block*> new_blocks;
-
-        //Block *new_block = new Block;
-        //*new_block = b;
-        //Block *new_block_rot = new Block;
-        //new_block_rot = b.rotate();
-
-        //new_blocks.push_back(new_block);
-        //new_blocks.push_back(new_block_rot);
-
-        //separated_blocks.push_back(new_blocks);
-    //}
-
     
     // TEST ///////////////////////////////////////////////////////////////////
 
@@ -62,38 +42,12 @@ std::vector<Block> floorplan(std::vector<Block> blocks, std::string filename)
     // ENDTEST ////////////////////////////////////////////////////////////////
 
     
-    // Build an initial slicing tree
-    //std::vector<int> slicingTree;
-
-    //slicingTree.push_back(0);
-
-    //for (int i = 1; i < separated_blocks.size(); i++)
-    //{
-        //slicingTree.push_back(i);
-
-        //if (i % 2)
-        //{
-            //slicingTree.push_back(HORIZONTAL_SLICE);
-        //}
-        //else
-        //{
-            //slicingTree.push_back(VERTICAL_SLICE);
-        //}
-    //}
 
     // Create a slicing tree object
     SlicingTree stree(blocks);
-
-    //std::cout << "Initial blocks:" << std::endl;
-
-    //for (Block &b : blocks)
-    //{
-        //std::cout << b << std::endl;
-    //}
-    //assert(false);
     
-    std::cout << "Initial slicing tree:" << std::endl;
-    std::cout << stree.toString() << std::endl;
+    //std::cout << "Initial slicing tree:" << std::endl;
+    //std::cout << stree.toString() << std::endl;
 
     // Perform simulated annealing
     int temp = STARTING_TEMP;
@@ -101,135 +55,61 @@ std::vector<Block> floorplan(std::vector<Block> blocks, std::string filename)
     int cost;
 
     double min_score = std::numeric_limits<double>::max();
+    
+    // Get the initial score
     double current_score = stree.score();
     
-    std::cout << "Initial score: " << current_score << std::endl;
+    //std::cout << "Initial score: " << current_score << std::endl;
 
     SlicingTree min_stree;
     SlicingTree new_stree;
 
     while (temp > freeze_temp)
     {
-        //std::cout << "Temp: " << temp << std::endl;
-
-        // Find minimum size combination of blocks for this slicing tree
-        //current_score = stree.score();
 
         for (int i = 0; i < NUM_MOVES_PER_STEP; i++)
         {
-            //std::cout << i << std::endl;
-            //for (int &i : slicingTree)
-            //{
-                //std::cout << i << " ";
-            //}
-            //std::cout << std::endl;
-
             // Copy the current tree
             new_stree = stree;
 
-            //std::cout << "Slicing tree copy: " << new_stree.toString() << std::endl;
-
-            // Make a move on the current tree
-            //std::cout << "before make move" << std::endl;
+            // Make a move on the new slicing tree and get the new score
             double new_score = new_stree.makeMove();
-            //std::cout << "after make move" << std::endl;
-
-            //std::cout << "New slicing tree: " << new_stree.toString() << std::endl;
-            //std::cout << "New score: " << new_score << std::endl;
-
-
-            //for (int &i : newSlicingTree)
-            //{
-                //std::cout << i << " ";
-            //}
-            //std::cout << std::endl;
 
             // New tree should be a valid slicing tree
             assert(new_stree.isValid());
 
-            // Get the combined blocks of the new tree
-            // Get the score of the combined blocks
-            //int new_score = new_stree.score();
-
+            // Check if is a new minimum
             if (new_score < min_score)
             {
                 min_score = new_score;
                 min_stree = new_stree;
             }
 
+            // Compute cost
             cost = new_score - current_score;
-            //std::cout << "Cost: " << cost << std::endl;
 
+            // Check if move is acceptable with current cost
             if (acceptMove(cost, temp))
             {
                 // Accept the move
+
+                // Save the slicing tree
                 stree = new_stree;
+                
+                // Update current score
                 current_score = new_score;
-                //std::cout << "accepted" << std::endl;
             }
         }
-
-        //std::cout << "Current tree: " << min_stree.toString() << std::endl;
-        //std::cout << "Current score: " << min_score << std::endl;
 
         // Cool down
         temp = COOLING_FACTOR * temp;
     }
 
-    double final_area = min_stree.score();
-
-    std::cout << "Final area: " << final_area << std::endl;
-    std::cout << "Final stree: " << stree.toString() << std::endl;
+    SlicingTree *result_stree = new SlicingTree;
+    *result_stree = min_stree;
 
 
-
-    //// Get the block combinations of the final slicing tree
-    //Block* final_block = stree.score();
-    //int final_area = final_block->area();
-
-    //std::cout << "Final area: " << final_area << std::endl;
-    //std::cout << stree.toString() << std::endl;
-
-    ////std::cout << final_block << std::endl;
-    ////std::cout << *(final_block.leftChild) << std::endl;
-    ////std::cout << *(final_block.rightChild) << std::endl;
-
-    double white_area = 0;
-
-    for (Block &b : blocks)
-    {
-        white_area += b.widths_heights[0].area();
-    }
-
-    std::cout << "White area: " << white_area << std::endl;
-
-    double black_area = final_area - white_area;
-
-    std::cout << "Black area: " << black_area << std::endl;
-
-    std::cout << "Black area percent: " << black_area / final_area << std::endl;
-
-
-    //std::cout << "Min area: " << min_score << std::endl;
-    //std::cout << min_stree.toString() << std::endl;
-
-    std::cout << min_stree.getCoords() << std::endl;
-
-    // Write to output file
-    std::string output_file = filename.substr(0,filename.find_last_of('.'))+".out";
-
-    std::ofstream out_file;
-    out_file.open(output_file);
-
-    out_file << "Final area = " << final_area << std::endl;
-    out_file << "Black area = " << black_area << std::endl << std::endl;
-
-    out_file << "block_name lower_left(x,y)coordinate upper_right(x,y)coordinate" << std::endl;
-    out_file << min_stree.getCoords() << std::endl;
-
-    out_file.close();
-
-    return final_blocks;
+    return result_stree;
 }
 
 
