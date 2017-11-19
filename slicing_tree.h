@@ -56,6 +56,8 @@ class SlicingTree
         // Get coordinates
         std::string getCoords();
 
+        void fixPointers();
+
 };
 
 

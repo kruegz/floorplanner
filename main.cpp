@@ -6,6 +6,7 @@
 #include <sstream>
 #include <vector>
 #include <iterator>
+#include <cmath>
 
 #include "block.h"
 #include "floorplan.h"
@@ -26,7 +27,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return elems;
 }
 
-Block parseLine(std::string line)
+Block parseLineHard(std::string line)
 {
     std::vector<std::string> split_line = split(line, ' ');
 
@@ -59,6 +60,82 @@ Block parseLine(std::string line)
     return b;
 }
 
+Block parseLineSoft(std::string line)
+{
+    std::vector<std::string> split_line = split(line, ' ');
+
+    std::string name = split_line[0];
+
+    double area = stof(split_line[2]);
+    double min_aspect = stof(split_line[3]);
+    double max_aspect = stof(split_line[4]);
+
+    // Set of possible block widths and heights
+    std::vector<WidthHeight> whs;
+    
+    if (min_aspect == max_aspect)
+    {
+        // Aspect ratios are the same, only add one size
+
+        double width = sqrt(area * min_aspect);
+        double height = sqrt(area / min_aspect);
+
+        whs.push_back(WidthHeight(width, height, -1, -1));
+    }
+    else if (max_aspect <= 1 or min_aspect >= 1)
+    {
+        // 1 is not in range of aspects, only add two aspects
+        
+        double width = sqrt(area * min_aspect);
+        double height = sqrt(area / min_aspect);
+
+        whs.push_back(WidthHeight(width, height, -1, -1));
+        
+        width = sqrt(area * max_aspect);
+        height = sqrt(area / max_aspect);
+
+        whs.push_back(WidthHeight(width, height, -1, -1));
+    }
+    else
+    {
+        // Add min_aspect, max_aspect, and aspect=1 size blocks
+        double width = sqrt(area * min_aspect);
+        double height = sqrt(area / min_aspect);
+
+        whs.push_back(WidthHeight(width, height, -1, -1));
+        
+        width = sqrt(area * max_aspect);
+        height = sqrt(area / max_aspect);
+
+        whs.push_back(WidthHeight(width, height, -1, -1));
+
+        width = sqrt(area);
+        height = sqrt(area);
+
+        whs.push_back(WidthHeight(width, height, -1, -1));
+    }
+
+    
+    Block b(name, false, whs);
+
+    return b;
+}
+
+Block parseLine(std::string line)
+{
+    std::vector<std::string> split_line = split(line, ' ');
+
+    // Determine if soft or hard block
+    if (split_line[1] == "hardrectilinear")
+    {
+        return parseLineHard(line);
+    }
+    else
+    {
+        return parseLineSoft(line);
+    }
+}
+
 std::vector<Block> readBlocksFromFile(std::string filename)
 {
     std::vector<Block> blocks;
@@ -88,23 +165,15 @@ std::vector<Block> readBlocksFromFile(std::string filename)
 
         std::string name;
 
-        // Read soft blocks
-        for (int i = 0; i < num_soft_blocks; i++)
-        {
-            continue;
-        }
-        
-        // Read hard blocks
-        for (int i = 0; i < num_hard_blocks; i++)
+        // Read blocks
+        for (int i = 0; i < num_hard_blocks + num_soft_blocks; i++)
         {
             getline(fin, line);
 
             Block new_block = parseLine(line);
 
             blocks.push_back(new_block);
-            
         }
-
 
     }
     else
@@ -123,8 +192,8 @@ void outputSolution(SlicingTree *st, std::string filename)
     // Get the final area of the minimum slicing tree
     double final_area = st->score();
 
-    std::cout << "Final stree: " << st->toString() << std::endl;
-    std::cout << "Final area: " << final_area << std::endl;
+    //std::cout << "Final stree: " << st->toString() << std::endl;
+    //std::cout << "Final area: " << final_area << std::endl;
 
 
     // Compute white area
@@ -146,8 +215,10 @@ void outputSolution(SlicingTree *st, std::string filename)
     // Compute black area
     double black_area = final_area - white_area;
 
-    std::cout << "Black area: " << black_area << std::endl;
-    std::cout << "Black area percent: " << black_area / final_area << std::endl;
+    //std::cout << "Black area: " << black_area << std::endl;
+    //std::cout << "Black area percent: " << black_area / final_area << std::endl;
+
+    std::cout << black_area / final_area << std::endl;
 
     // Write to output file
 

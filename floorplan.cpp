@@ -50,8 +50,9 @@ SlicingTree* floorplan(std::vector<Block> blocks)
     //std::cout << stree.toString() << std::endl;
 
     // Perform simulated annealing
-    int temp = STARTING_TEMP;
+    int temp = STARTING_TEMP * blocks.size();
     int freeze_temp = FREEZING_TEMP;
+    int steps = NUM_MOVES_PER_STEP * blocks.size();
     int cost;
 
     double min_score = std::numeric_limits<double>::max();
@@ -66,8 +67,9 @@ SlicingTree* floorplan(std::vector<Block> blocks)
 
     while (temp > freeze_temp)
     {
+        //std::cout << temp << std::endl;
 
-        for (int i = 0; i < NUM_MOVES_PER_STEP; i++)
+        for (int i = 0; i < steps; i++)
         {
             // Copy the current tree
             new_stree = stree;
@@ -179,7 +181,7 @@ void verticalNodeSizing(Block *a, Block *b, Block *result)
     //std::cout << len_a << " " << len_b << std::endl;
 
     int i = 0, j = 0;
-    int new_width, new_height;
+    double new_width, new_height;
 
 
     WidthHeight a_wh, b_wh;
@@ -247,13 +249,14 @@ void horizontalNodeSizing(Block *a, Block *b, Block *result)
     //std::cout << len_a << " " << len_b << std::endl;
 
     int i = 0, j = 0;
-    int new_width, new_height;
+    double new_width, new_height;
 
 
     WidthHeight a_wh, b_wh;
 
     while (i < len_a and j < len_b)
     {
+        //std::cout << i << " " << j << std::endl;
         //Block *current_a = a[i];
         //Block *current_b = b[j];
 
@@ -276,6 +279,8 @@ void horizontalNodeSizing(Block *a, Block *b, Block *result)
         //std::cout << "new " << new_block << std::endl;
 
         //final_blocks.push_back(new_block);
+
+        //std::cout << new_width << " " << a_wh.width << " " << b_wh.width << std::endl;
 
         if (new_width == a_wh.width)
         {

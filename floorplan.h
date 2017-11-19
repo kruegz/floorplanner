@@ -9,10 +9,10 @@
 #define HORIZONTAL_SLICE -1
 #define VERTICAL_SLICE -2
 
-#define STARTING_TEMP 10000000
+#define STARTING_TEMP 100000
 #define FREEZING_TEMP 10
 
-#define NUM_MOVES_PER_STEP 50
+#define NUM_MOVES_PER_STEP 1
 #define COOLING_FACTOR 0.99
 
 #define boltz_k 1
