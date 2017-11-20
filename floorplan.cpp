@@ -6,6 +6,8 @@
 #include <time.h>
 #include <climits>
 #include <fstream>
+#include <algorithm>
+#include <limits>
 
 #include "floorplan.h"
 #include "block.h"
