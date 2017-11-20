@@ -42,8 +42,5 @@ void sortByWidth(Block *b);
 // Check if a slicing tree is valid
 bool isValidSlicingTree(std::vector<int> slicingTree);
 
-void printSlicingTree(std::vector<int> slicingTree);
-
-void deleteSuperBlock(Block *b);
 
 #endif

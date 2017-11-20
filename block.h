@@ -6,7 +6,7 @@
 
 class Block;
 
-// Struct to store width and height with corresponding indexes in children
+// Object to store width and height with corresponding indexes in children
 class WidthHeight
 {
     public:
@@ -32,6 +32,7 @@ class WidthHeight
             right_index(right_index)
         {};
 
+        // Create a rotated copy
         WidthHeight rotate()
         {
             return WidthHeight(height, width, left_index, right_index);
@@ -43,20 +44,16 @@ class WidthHeight
         }
 };
 
+// Object to store a block with all combinations of widths/heights
 class Block {
 public:
 
 	// Details of the block
     std::string blockName;
 	bool isSoft; // true for a soft-macro and null for a hard-macro
-	//float width;
-	//float height;
-	//float area;
 
-    //std::vector<double> widths;
-    //std::vector<double> heights;
+    // Set of width/height combinations
     std::vector<WidthHeight> widths_heights;
-    //std::vector<double> areas;
 
     int wh_index;
 
@@ -64,17 +61,6 @@ public:
     Block *leftChild;
     Block *rightChild;
     Block *parentBlock;
-
-    // The slice that combines children
-    //int child_slice;
-
-    // Indexs of parent and children in slicing tree
-    //int parent_index;
-    //int parent_specific;
-    //int lchild_index;
-    //int rchild_index;
-    //int lchild_specific;
-    //int rchild_specific;
 
 	// For soft-macros only otherwise NULL
 	float minAspectRatio;
@@ -104,7 +90,6 @@ public:
         isSoft(false),
         widths_heights(0),
         wh_index(-1),
-        //areas(0),
         leftChild(NULL),
         rightChild(NULL),
         parentBlock(NULL),
@@ -117,8 +102,6 @@ public:
         isSoft(isSoft),
         widths_heights(widths_heights),
         wh_index(-1),
-        //areas(compute_areas),
-        //child_slice(0),
         leftChild(NULL),
         rightChild(NULL),
         parentBlock(NULL),
@@ -131,8 +114,6 @@ public:
         isSoft(isSoft),
         widths_heights(widths_heights),
         wh_index(-1),
-        //areas(compute_areas),
-        //child_slice(0),
         leftChild(lchild),
         rightChild(rchild),
         parentBlock(parent),
@@ -141,20 +122,7 @@ public:
     {};
 
 
-    // Destructor
-    //~Block()
-    //{
-        //if (leftChild != NULL)
-        //{
-            //delete leftChild;
-        //}
-
-        //if (rightChild != NULL)
-        //{
-            //delete rightChild;
-        //}
-    //};
-
+    // Convert to string for debugging
     std::string toString() const
     {
         std::ostringstream stringStream;
@@ -178,11 +146,13 @@ public:
         return stringStream.str();
     }
 
+    // Output operator
     friend std::ostream &operator<<( std::ostream &output, const Block &b ) {
         output << b.toString();
         return output;
     }
 
+    // Create a rotated version of block
     Block* rotate()
     {
         std::vector<WidthHeight> new_wh = widths_heights;
@@ -195,17 +165,6 @@ public:
         return new Block(blockName, isSoft, new_wh);
     }
 
-    //std::vector<double> compute_areas()
-    //{
-        //std::vector<double> areas;
-
-        //for (std::pair<double, double>& wh : widths_heights)
-        //{
-            //areas.push_back(wh.first * wh.second);
-        //}
-
-        //return areas;
-    //}
 
 };
 

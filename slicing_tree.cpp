@@ -9,17 +9,18 @@
 #include "block.h"
 #include "floorplan.h"
 
-
-
+// Construct a slicing tree from a set of blocks
 SlicingTree::SlicingTree(std::vector<Block> blks)
 {
+    // Add blocks to tree
     for (Block &b : blks)
     {
         Block *new_b = new Block;
         *new_b = b;
         blocks.push_back(new_b);
     }
-
+    
+    // Add alternating horizontal and vertical slices
     for (int i = 0; i < blks.size() - 1; i++)
     {
         if (i & 1)
@@ -33,6 +34,7 @@ SlicingTree::SlicingTree(std::vector<Block> blks)
     }
 }
 
+// Fix the parent/child relationships in a slicing tree
 void SlicingTree::fixPointers()
 {
     // Stack for evaluating slicing polish expression
@@ -132,6 +134,7 @@ double SlicingTree::makeMove()
             Block *b1 = blocks[r1];
             Block *b2 = blocks[r2];
             
+            // Swap the blocks
             std::swap(blocks[r1], blocks[r2]);
 
 
@@ -160,13 +163,6 @@ double SlicingTree::makeMove()
     return new_score;
 }
 
-// Swap two elements in the slicing tree
-//void SlicingTree::swap(int i, int j)
-//{
-    //int tmp = tree[i];
-    //tree[i] = tree[j];
-    //tree[j] = tmp;
-//}
 
 // Check if tree is valid
 bool SlicingTree::isValid()
@@ -220,32 +216,11 @@ std::string SlicingTree::toString()
     return str.str();
 }
 
-void printVector(std::vector<Block*> blocks)
-{
-    for (Block *b : blocks)
-    {
-        std::cout << *b << std::endl;
-    }
-}
 
-//Block * copySuperBlock(Block *b)
-//{
-    //if (b != NULL)
-    //{
-        //Block *new_block = new Block;
-        //*new_block = b;
-        //new_block->leftChild = copySuperBlock(b->leftChild);
-        //new_block->rightChild = copySuperBlock(b->rightChild);
-    //}
-    //else
-    //{
-        //return NULL;
-    //}
-
-//}
-
+// Score a single block 
 void SlicingTree::scoreSingle(Block *b)
 {
+    // Check if slice
     if (b->blockName == "|")
     {
         assert(b->leftChild != NULL);
@@ -266,6 +241,7 @@ void SlicingTree::scoreSingle(Block *b)
 // Return the new min area
 double SlicingTree::scoreUp(Block *b)
 {
+    // Score the current block
     scoreSingle(b);
 
     // Check if we have a parent
@@ -282,6 +258,7 @@ double SlicingTree::scoreUp(Block *b)
 
         assert(b->widths_heights.size() >= 1);
 
+        // Loop through all possible width/height combinations for current block
         for (WidthHeight &wh : b->widths_heights)
         {
             double area = wh.area();
@@ -299,7 +276,6 @@ double SlicingTree::scoreUp(Block *b)
 }
 
 // Find minimum area
-// Return index of best area in root block
 double SlicingTree::score()
 {
     // Stack for evaluating slicing polish expression
@@ -366,7 +342,6 @@ double SlicingTree::score()
 
     // We have reached the end of the polish expression
     // There should be only a set of final areas remaining
-    //std::cout << stack.size() << std::endl;
     assert(stack.size() == 1);
 
     // All that is left to do is find the min area
@@ -378,7 +353,6 @@ double SlicingTree::score()
 
     for (int i = 0; i < stack[0]->widths_heights.size(); i++)
     {
-        //std::cout << *b << std::endl;
         double new_area = stack[0]->widths_heights[i].area();
 
         if (new_area < min_area)
@@ -390,11 +364,11 @@ double SlicingTree::score()
 
     assert(min_area_index != -1);
 
-    //std::cout << "Min block name: " << min_area_block->blockName << std::endl;
 
     return min_area;
 }
-        
+
+// Slicing tree assignment
 SlicingTree& SlicingTree::operator= (const SlicingTree &s)
 {
 
@@ -406,6 +380,7 @@ SlicingTree& SlicingTree::operator= (const SlicingTree &s)
 
     std::vector<Block*> new_blocks;
 
+    // Make copies of each block
     for (Block *b : s.blocks)
     {
         Block *new_b = new Block;
@@ -420,8 +395,10 @@ SlicingTree& SlicingTree::operator= (const SlicingTree &s)
     return *this;
 }
 
+// Clear memory for a slicing tree
 SlicingTree::~SlicingTree()
 {
+    // Delete all the blocks
     for (Block *b : blocks)
     {
         if (b != NULL)
@@ -434,6 +411,7 @@ SlicingTree::~SlicingTree()
 // Recursively compute coordinates
 void SlicingTree::computeCoords(Block *b, int wh_index)
 {
+    // Check if slice
     if (b->blockName == "|")
     {
         assert(b->leftChild != NULL);
@@ -496,8 +474,6 @@ void SlicingTree::computeCoords(Block *b, int wh_index)
         // Leaf node
         assert(b->wh_index != -1);
     }
-    
-    //std::cout << *b << std::endl;
 }
         
 // Get coordinates
@@ -510,6 +486,7 @@ std::string SlicingTree::getCoords()
 
     assert(root->blockName == "|" or root->blockName == "-");
 
+    // Find the minimum area combination of width/height for root
     int min_index = -1;
     double min_area = std::numeric_limits<double>::max();
 

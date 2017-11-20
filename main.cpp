@@ -12,6 +12,7 @@
 #include "floorplan.h"
 #include "slicing_tree.h"
 
+// Helper function to split a string
 template<typename Out> 
 void split(const std::string &s, char delim, Out result) {
     std::stringstream ss(s);
@@ -21,12 +22,14 @@ void split(const std::string &s, char delim, Out result) {
     }
 }
 
+// Helper function to split a string
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
     split(s, delim, std::back_inserter(elems));
     return elems;
 }
 
+// Parse a line into a hard bloc
 Block parseLineHard(std::string line)
 {
     std::vector<std::string> split_line = split(line, ' ');
@@ -34,11 +37,12 @@ Block parseLineHard(std::string line)
     std::string name;
     int width, height;
 
-
+    // Parse the line
     name = split_line[0];
 
     std::string width_str, height_str;
 
+    // Get the width and height
     width_str = split_line[6];
     width_str.pop_back();
     height_str = split_line[7];
@@ -48,24 +52,30 @@ Block parseLineHard(std::string line)
     width = stof(width_str);
     height = stof(height_str);
 
+    // Create a width height object
     WidthHeight wh(width, height, -1, -1);
 
     std::vector<WidthHeight> whs;
 
+    // Add the width height and rotation to the set of widths and height
     whs.push_back(wh);
     whs.push_back(wh.rotate());
-    
+   
+    // Create a new block with the set of possible widths and heights
     Block b(name, false, whs);
 
     return b;
 }
 
+// Parse a line into a soft block
 Block parseLineSoft(std::string line)
 {
+    // Split the line by space
     std::vector<std::string> split_line = split(line, ' ');
 
     std::string name = split_line[0];
 
+    // Get the area and aspect ratios from the line
     double area = stof(split_line[2]);
     double min_aspect = stof(split_line[3]);
     double max_aspect = stof(split_line[4]);
@@ -115,12 +125,13 @@ Block parseLineSoft(std::string line)
         whs.push_back(WidthHeight(width, height, -1, -1));
     }
 
-    
+    // Create a new block with the set of widths and heights
     Block b(name, false, whs);
 
     return b;
 }
 
+// Parse a line into either a soft or hard block
 Block parseLine(std::string line)
 {
     std::vector<std::string> split_line = split(line, ' ');
@@ -136,6 +147,7 @@ Block parseLine(std::string line)
     }
 }
 
+// Read a file into a bunch of blocks
 std::vector<Block> readBlocksFromFile(std::string filename)
 {
     std::vector<Block> blocks;
@@ -187,13 +199,11 @@ std::vector<Block> readBlocksFromFile(std::string filename)
     return blocks;
 }
 
+// Output a solution in the form of a slicing tree into an output file
 void outputSolution(SlicingTree *st, std::string filename)
 {
     // Get the final area of the minimum slicing tree
     double final_area = st->score();
-
-    //std::cout << "Final stree: " << st->toString() << std::endl;
-    //std::cout << "Final area: " << final_area << std::endl;
 
 
     // Compute white area
@@ -205,19 +215,16 @@ void outputSolution(SlicingTree *st, std::string filename)
         if (b->blockName != "|" and b->blockName != "-")
         {
             double block_area = b->widths_heights[0].area();
-            //std::cout << block_area << std::endl;
             white_area += block_area;
         }
     }
 
-    //std::cout << "White area: " << white_area << std::endl;
 
     // Compute black area
     double black_area = final_area - white_area;
 
-    //std::cout << "Black area: " << black_area << std::endl;
-    //std::cout << "Black area percent: " << black_area / final_area << std::endl;
 
+    // Print the percentage
     std::cout << black_area / final_area << std::endl;
 
     // Write to output file
@@ -228,6 +235,8 @@ void outputSolution(SlicingTree *st, std::string filename)
     out_file << "Black area = " << black_area << std::endl << std::endl;
 
     out_file << "block_name lower_left(x,y)coordinate upper_right(x,y)coordinate" << std::endl;
+
+    // Output all coordinates
     out_file << st->getCoords() << std::endl;
 
     out_file.close();

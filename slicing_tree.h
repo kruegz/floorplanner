@@ -3,6 +3,7 @@
 
 #include "block.h"
 
+// Object to store a slicing tree
 class SlicingTree
 {
     public:
@@ -56,6 +57,7 @@ class SlicingTree
         // Get coordinates
         std::string getCoords();
 
+        // Method to fix all the parent/child relationships among blocks
         void fixPointers();
 
 };
